@@ -1,8 +1,5 @@
-my_website/          # المجلد الرئيسي
-├── app.py           # كود البايثون الرئيسي
-├── templates/       # مجلد القوالب (HTML هنا)
-│   └── index.html   # ملف HTML الخاص بك
-├── static/          # (اختياري) للملفات الثابتة (CSS, JS, صور)
-│   ├── style.css
-│   └── script.js
-└── requirements.txt # قائمة المكتبات المطلوبة
+/my_website
+├── index.html      
+├── script.js       
+├── style.css       
+└── assets/         
